@@ -1,0 +1,99 @@
+
+#+TITLE: music layer
+#+HTML_HEAD_EXTRA: <link rel="stylesheet" type="text/css" href="../css/readtheorg.css" />
+
+[[img/emms.jpg]]
+
+* Table of Contents                                        :TOC_4_org:noexport:
+ - [[Description][Description]]
+ - [[Install][Install]]
+ - [[Key bindings][Key bindings]]
+
+* Description
+This layer installs EMMS and configures it to use MPD. The only dependency of
+this layer is a running instance of MPD on your system. You can setup MPD with
+the following script:
+#+BEGIN_SRC bash
+$ mkdir -p ~/.config/mpd
+$ cd ~/.config/mpd
+$ touch database log pid state sticker sql
+#+END_SRC
+
+After that you create the file =~/.config/mpd/mpd.conf= with the following
+content (this is an working example if you have pulse audio installed):
+#+BEGIN_SRC conf
+# Required files
+db_file            "~/.config/mpd/database"
+log_file           "~/.config/mpd/log"
+
+# Optional
+music_directory    "~/Music"
+playlist_directory "~/Playlists" # "~/.config/mpd/playlists"
+pid_file           "~/.config/mpd/pid"
+state_file         "~/.config/mpd/state"
+sticker_file       "~/.config/mpd/sticker.sql"
+
+port "12010"
+
+audio_output {
+        type            "pulse"
+        name            "pulse audio"
+}
+#+END_SRC
+
+If you want to run MPD as SystemD user level application you can create the file
+=~/.config/systemd/user/mpd.service= with the following content:
+#+BEGIN_SRC conf
+[Unit]
+Description=Music Player Daemon (MPD)
+
+[Service]
+Type=forking
+ExecStart=/usr/bin/mpd
+ExecStop=/usr/bin/mpd --kill
+Restart=always
+
+[Install]
+WantedBy=default.target
+#+END_SRC
+
+Now you can run:
+#+BEGIN_SRC bash
+$ systemctl start --user mpd
+$ systemctl enable --user mpd
+#+END_SRC
+
+* Install
+To use this configuration layer, add it to your =~/.spacemacs=. You will need to
+add =music= to the existing =dotspacemacs-configuration-layers= list in this
+file.
+
+Further you have to give the port of the running MPD instance and connect emacs
+to it. You can achieve his by adding the following code to existing
+=dotspacemacs/user-config= function in your =~/.spacemacs= file:
+#+BEGIN_SRC emacs-lisp
+  (setq emms-player-mpd-server-port "12010") ;; example port
+  (emms-player-mpd-connect)
+#+END_SRC
+
+* Key bindings
+
+| Key Binding   | Description                 |
+|---------------+-----------------------------|
+| ~<SPC> a m o~ | Opens the EMMS buffer       |
+| ~<SPC> a m S~ | Starts the player           |
+| ~<SPC> a m s~ | Stops the player            |
+| ~<SPC> a m P~ | Pauses/continues the player |
+| ~<SPC> a m p~ | Previous song               |
+| ~<SPC> a m n~ | Next song                   |
+| ~<SPC> a m +~ | Raise the volume by 5%      |
+| ~<SPC> a m -~ | Lower the volume by 5%      |
+| ~<SPC> a m *~ | Raise the volume by 10%     |
+| ~<SPC> a m _~ | Lower the volume by 10%     |
+| ~<SPC> a m l~ | Add playlist file           |
+| ~<SPC> a m f~ | Add a single file           |
+| ~<SPC> a m F~ | Search and add files        |
+| ~<SPC> a m <~ | Seek backward               |
+| ~<SPC> a m >~ | Seek forward                |
+| ~<SPC> a m h~ | Shuffle the playlist buffer |
+| ~<SPC> a m c~ | Clear the playlist buffer   |
